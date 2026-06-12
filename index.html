@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cricket Arena AI</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Original cricket game prototype</p>
+          <h1>Cricket Arena AI</h1>
+          <p class="subtitle">Fast arcade cricket with timing-based batting, AI bowling, match pressure, and multiplayer-ready architecture.</p>
+        </div>
+        <div class="hero-actions">
+          <button id="startBtn" class="primary">Start Match</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+      </section>
+
+      <section class="arena-layout">
+        <aside class="panel lobby">
+          <div class="profile">
+            <div class="avatar">HR</div>
+            <div>
+              <strong>Harish XI</strong>
+              <span>Powerplay rating 91</span>
+            </div>
+          </div>
+
+          <div class="mode-card active">
+            <strong>Quick Match</strong>
+            <span>1 over chase, AI opponent</span>
+          </div>
+          <div class="mode-card">
+            <strong>Online Arena</strong>
+            <span>Socket server ready in roadmap</span>
+          </div>
+          <div class="mode-card">
+            <strong>Career Mode</strong>
+            <span>Player progression concept</span>
+          </div>
+
+          <div class="controls">
+            <h2>Controls</h2>
+            <p><kbd>Space</kbd> shot timing</p>
+            <p><kbd>A</kbd> loft left</p>
+            <p><kbd>D</kbd> loft right</p>
+            <p><kbd>S</kbd> defensive tap</p>
+          </div>
+        </aside>
+
+        <section class="game-panel">
+          <div class="scorebar">
+            <div>
+              <span>Target</span>
+              <strong id="target">18</strong>
+            </div>
+            <div>
+              <span>Score</span>
+              <strong id="score">0/0</strong>
+            </div>
+            <div>
+              <span>Balls</span>
+              <strong id="balls">0.0</strong>
+            </div>
+            <div>
+              <span>Need</span>
+              <strong id="equation">18 from 6</strong>
+            </div>
+          </div>
+
+          <canvas id="gameCanvas" width="1100" height="650" aria-label="Cricket gameplay canvas"></canvas>
+
+          <div class="playbar">
+            <div>
+              <span id="ballType">Waiting for bowler</span>
+              <strong id="status">Press Start Match</strong>
+            </div>
+            <div class="timing-wrap">
+              <span>Timing</span>
+              <div class="timing-meter"><div id="timingNeedle"></div></div>
+            </div>
+            <button id="shotBtn" class="primary">Play Shot</button>
+          </div>
+        </section>
+
+        <aside class="panel analytics">
+          <h2>AI match brain</h2>
+          <div id="insights" class="insights"></div>
+          <h2>Shot map</h2>
+          <div id="shotMap" class="shot-map"></div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
