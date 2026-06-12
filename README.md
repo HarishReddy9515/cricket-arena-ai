@@ -8,6 +8,9 @@ The goal is to show how a future online cricket game could combine smooth gamepl
 
 - Premium sports-game lobby UI
 - Canvas-based cricket arena rendering
+- Optional Three.js 3D stadium mode
+- Procedural 3D player models and batting/bowling animation
+- High-intensity stadium lighting and shadow setup
 - Timing-based batting mechanic
 - AI bowler delivery selection
 - Bowling variation: yorker, outswinger, cutter, bouncer
@@ -15,6 +18,8 @@ The goal is to show how a future online cricket game could combine smooth gamepl
 - Shot map visualization
 - Match pressure insights
 - Keyboard and button controls
+- PWA mobile install manifest and service worker
+- Dependency-free WebSocket multiplayer server scaffold
 - No dependencies or build step
 
 ## Run
@@ -31,6 +36,20 @@ Then visit:
 http://localhost:8090
 ```
 
+The 2D game works from the local files. The optional 3D stadium mode loads Three.js from a CDN, so it needs internet access unless Three.js is vendored into the project.
+
+Run the multiplayer server scaffold:
+
+```bash
+node server/multiplayer-server.js
+```
+
+Health check:
+
+```text
+http://localhost:8787/health
+```
+
 ## Controls
 
 - `Space`: play shot
@@ -40,9 +59,8 @@ http://localhost:8090
 
 ## Multiplayer roadmap
 
-This prototype is local-first. A real online version would add:
+This prototype now includes a dependency-free WebSocket server scaffold in `server/multiplayer-server.js`. A production online version would add:
 
-- WebSocket match server
 - authoritative ball physics on the server
 - deterministic client prediction
 - lag compensation
@@ -51,11 +69,24 @@ This prototype is local-first. A real online version would add:
 - anti-cheat validation for shot timing
 - replay system
 
+## Graphics roadmap
+
+The 3D mode uses procedural Three.js geometry. To reach true AAA graphics, the next step is importing licensed 3D assets:
+
+- stadium GLB/FBX models
+- rigged batter/bowler/player models
+- motion-captured batting and bowling animation clips
+- physically based materials
+- crowd and broadcast camera packages
+- mobile-optimized LOD meshes and texture compression
+
 ## Why this belongs in a portfolio
 
 This project demonstrates:
 
 - real-time game loop design
+- Three.js scene design
+- procedural 3D animation
 - animation and input handling
 - sports simulation logic
 - game-state management

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Cricket Arena AI</title>
+    <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
@@ -16,6 +17,7 @@
         </div>
         <div class="hero-actions">
           <button id="startBtn" class="primary">Start Match</button>
+          <button id="toggle3dBtn" class="secondary">3D Stadium</button>
           <button id="resetBtn" class="secondary">Reset</button>
         </div>
       </section>
@@ -72,7 +74,12 @@
             </div>
           </div>
 
-          <canvas id="gameCanvas" width="1100" height="650" aria-label="Cricket gameplay canvas"></canvas>
+          <div class="viewport">
+            <canvas id="gameCanvas" width="1100" height="650" aria-label="Cricket gameplay canvas"></canvas>
+            <div id="threeViewport" class="three-viewport" aria-label="3D cricket stadium preview">
+              <div class="three-fallback">Loading 3D stadium...</div>
+            </div>
+          </div>
 
           <div class="playbar">
             <div>
@@ -97,5 +104,6 @@
     </main>
 
     <script src="app.js"></script>
+    <script type="module" src="three-scene.js"></script>
   </body>
 </html>

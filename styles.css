@@ -210,6 +210,37 @@ canvas {
   background: #122314;
 }
 
+.viewport {
+  position: relative;
+  min-height: 360px;
+  background: #122314;
+}
+
+.three-viewport {
+  position: absolute;
+  inset: 0;
+  display: none;
+  background: #061018;
+}
+
+.three-viewport.active {
+  display: block;
+}
+
+.three-viewport canvas {
+  height: 100% !important;
+  background: transparent;
+}
+
+.three-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: 900;
+}
+
 .playbar {
   display: grid;
   grid-template-columns: 1fr 260px auto;

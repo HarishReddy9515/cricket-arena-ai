@@ -340,3 +340,9 @@ window.addEventListener("keyup", () => {
 updateHud();
 renderShotMap();
 loop();
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./service-worker.js").catch(() => {
+    // Local file mode or restricted browsers may block service workers.
+  });
+}
