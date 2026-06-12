@@ -79,6 +79,11 @@ function handleMessage(socket, message) {
     return;
   }
 
+  if (message.type === "ping") {
+    socket.write(encodeFrame(JSON.stringify({ type: "pong", clientTime: message.clientTime, serverTime: Date.now() })));
+    return;
+  }
+
   if (message.type === "ready") {
     current.ready = Boolean(message.ready);
     broadcastRoomState(current.roomId);
@@ -104,6 +109,15 @@ function handleMessage(socket, message) {
     match.wickets += outcome.wicket ? 1 : 0;
     match.balls += 1;
     match.lastOutcome = outcome;
+    match.timeline.push({
+      ball: match.balls,
+      playerId: current.playerId,
+      delivery: match.delivery.name,
+      runs: outcome.runs,
+      wicket: outcome.wicket,
+      message: outcome.message,
+      timestamp: Date.now()
+    });
     match.delivery = null;
     match.deliveryId = null;
     match.finished = match.score >= match.target || match.balls >= 6 || match.wickets >= 2;
@@ -157,7 +171,8 @@ function createMatch() {
     delivery: null,
     deliveryId: null,
     lastOutcome: null,
-    finished: false
+    finished: false,
+    timeline: []
   };
 }
 

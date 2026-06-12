@@ -23,6 +23,9 @@ The goal is to show how a future online cricket game could combine smooth gamepl
 - Browser WebSocket client for room sync
 - Server-authoritative delivery generation
 - Server-validated shot outcomes and synced score state
+- Live scorecard and replay timeline
+- Ping/latency check for multiplayer server
+- Match summary JSON export
 - Keyboard and button controls
 - PWA mobile install manifest and service worker
 - Dependency-free WebSocket multiplayer server scaffold
@@ -93,6 +96,8 @@ Implemented now:
 - server-selected deliveries
 - server-resolved shot outcomes
 - synced score, wickets, balls, delivery, and last outcome
+- timeline replay events
+- client/server ping checks
 
 ## Graphics roadmap
 

@@ -14,6 +14,11 @@ const roomCode = document.querySelector("#roomCode");
 const connectBtn = document.querySelector("#connectBtn");
 const readyBtn = document.querySelector("#readyBtn");
 const squadList = document.querySelector("#squadList");
+const pingStatus = document.querySelector("#pingStatus");
+const pingBtn = document.querySelector("#pingBtn");
+const scorecardGrid = document.querySelector("#scorecardGrid");
+const replayTimeline = document.querySelector("#replayTimeline");
+const exportSummaryBtn = document.querySelector("#exportSummaryBtn");
 
 const target = 18;
 let score = 0;
@@ -34,6 +39,8 @@ let roomPlayers = [];
 let ready = false;
 let onlineMode = false;
 let awaitingServer = false;
+let matchTimeline = [];
+let lastPingSent = 0;
 
 const deliveries = [
   { name: "Fast yorker", speed: 8.8, swing: -0.3, difficulty: 0.86 },
@@ -62,6 +69,7 @@ function startMatch() {
   running = true;
   deliveryActive = false;
   shots = [];
+  matchTimeline = [];
   message = "Bowler running in...";
   queueDelivery();
   updateHud();
@@ -148,9 +156,17 @@ function playShot() {
   wickets += outcome.wicket ? 1 : 0;
   message = outcome.message;
   shots.push({ runs: outcome.runs, angle: outcome.angle, distance: outcome.distance });
+  matchTimeline.push({
+    ball: balls,
+    delivery: ball.type.name,
+    runs: outcome.runs,
+    wicket: outcome.wicket,
+    message: outcome.message
+  });
 
   updateHud();
   renderShotMap();
+  renderScorecard();
   setTimeout(queueDelivery, 1250);
 }
 
@@ -193,6 +209,7 @@ function updateHud() {
   equationEl.textContent = score >= target ? "Won" : `${Math.max(0, target - score)} from ${Math.max(0, 6 - balls)}`;
   statusEl.textContent = message;
   renderInsights();
+  renderScorecard();
 }
 
 function renderInsights() {
@@ -247,6 +264,9 @@ function connectMultiplayer() {
     if (data.type === "match_state") {
       applyServerMatch(data.match);
     }
+    if (data.type === "pong") {
+      pingStatus.textContent = `${Date.now() - Number(data.clientTime)} ms`;
+    }
     if (data.type === "state") {
       message = "Remote player action synced.";
       updateHud();
@@ -268,6 +288,7 @@ function applyServerMatch(match) {
   score = match.score;
   wickets = match.wickets;
   balls = match.balls;
+  matchTimeline = match.timeline || matchTimeline;
 
   if (match.lastOutcome && awaitingServer) {
     shots.push(match.lastOutcome);
@@ -289,11 +310,17 @@ function applyServerMatch(match) {
   }
 
   updateHud();
+  renderScorecard();
   setTimeout(() => {
     if (onlineMode && running && !deliveryActive) {
       queueDelivery();
     }
   }, 900);
+}
+
+function pingServer() {
+  lastPingSent = Date.now();
+  sendRoomMessage({ type: "ping", clientTime: lastPingSent, playerId });
 }
 
 function toggleReady() {
@@ -326,6 +353,48 @@ function renderSquad() {
     `;
     squadList.appendChild(card);
   });
+}
+
+function renderScorecard() {
+  const runRate = balls ? (score / balls).toFixed(2) : "0.00";
+  const boundaries = matchTimeline.filter((event) => event.runs >= 4).length;
+  scorecardGrid.innerHTML = `
+    <article class="scorecard-metric"><strong>${score}/${wickets}</strong><span>score</span></article>
+    <article class="scorecard-metric"><strong>${balls}/6</strong><span>balls</span></article>
+    <article class="scorecard-metric"><strong>${runRate}</strong><span>runs per ball</span></article>
+    <article class="scorecard-metric"><strong>${boundaries}</strong><span>boundaries</span></article>
+  `;
+
+  replayTimeline.innerHTML = matchTimeline.length ? "" : "<div class=\"replay-item\"><span>No balls yet</span><strong>Start a match</strong><span>--</span></div>";
+  matchTimeline.slice().reverse().forEach((event) => {
+    const item = document.createElement("article");
+    item.className = "replay-item";
+    item.innerHTML = `
+      <span>Ball ${event.ball}</span>
+      <strong>${event.delivery || "Delivery"} · ${event.message}</strong>
+      <span>${event.runs}${event.wicket ? " W" : ""}</span>
+    `;
+    replayTimeline.appendChild(item);
+  });
+}
+
+function exportMatchSummary() {
+  const summary = {
+    mode: onlineMode ? "online" : "offline",
+    score,
+    wickets,
+    balls,
+    target,
+    timeline: matchTimeline,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(summary, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "cricket-arena-match-summary.json";
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function update() {
@@ -468,6 +537,8 @@ document.querySelector("#resetBtn").addEventListener("click", startMatch);
 document.querySelector("#shotBtn").addEventListener("click", playShot);
 connectBtn.addEventListener("click", connectMultiplayer);
 readyBtn.addEventListener("click", toggleReady);
+pingBtn.addEventListener("click", pingServer);
+exportSummaryBtn.addEventListener("click", exportMatchSummary);
 
 window.addEventListener("keydown", (event) => {
   if (event.code === "Space") {
@@ -486,6 +557,7 @@ window.addEventListener("keyup", () => {
 updateHud();
 renderShotMap();
 renderSquad();
+renderScorecard();
 loop();
 
 if ("serviceWorker" in navigator) {

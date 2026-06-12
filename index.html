@@ -68,6 +68,14 @@
             </div>
             <div id="squadList" class="squad-list"></div>
           </div>
+
+          <div class="network-card">
+            <div>
+              <strong>Network</strong>
+              <span id="pingStatus">-- ms</span>
+            </div>
+            <button id="pingBtn" class="secondary">Ping</button>
+          </div>
         </aside>
 
         <section class="game-panel">
@@ -107,6 +115,15 @@
               <div class="timing-meter"><div id="timingNeedle"></div></div>
             </div>
             <button id="shotBtn" class="primary">Play Shot</button>
+          </div>
+
+          <div class="scorecard">
+            <div class="section-title">
+              <h2>Live Scorecard</h2>
+              <button id="exportSummaryBtn" class="secondary">Export</button>
+            </div>
+            <div id="scorecardGrid" class="scorecard-grid"></div>
+            <div id="replayTimeline" class="replay-timeline"></div>
           </div>
         </section>
 
