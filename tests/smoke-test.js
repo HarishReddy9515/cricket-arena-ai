@@ -6,6 +6,8 @@ const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const js = fs.readFileSync(path.join(root, "app.js"), "utf8");
 const three = fs.readFileSync(path.join(root, "three-scene.js"), "utf8");
 const server = fs.readFileSync(path.join(root, "server", "multiplayer-server.js"), "utf8");
+const serviceWorker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
+const manifest = fs.readFileSync(path.join(root, "manifest.webmanifest"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 
 for (const id of ["gameCanvas", "threeViewport", "toggle3dBtn", "startBtn", "shotBtn", "score", "equation", "shotMap"]) {
@@ -30,6 +32,16 @@ for (const symbol of ["upgrade", "Sec-WebSocket-Accept", "broadcast", "decodeFra
   if (!server.includes(symbol)) {
     throw new Error(`Missing multiplayer server workflow: ${symbol}`);
   }
+}
+
+for (const symbol of ["serviceWorker", "manifest.webmanifest"]) {
+  if (!html.includes(symbol)) {
+    throw new Error(`Missing PWA page integration: ${symbol}`);
+  }
+}
+
+if (!serviceWorker.includes("caches.open") || !manifest.includes("standalone")) {
+  throw new Error("Missing mobile/PWA packaging files.");
 }
 
 if (!readme.includes("Multiplayer roadmap")) {
