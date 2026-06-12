@@ -52,6 +52,22 @@
             <p><kbd>D</kbd> loft right</p>
             <p><kbd>S</kbd> defensive tap</p>
           </div>
+
+          <div class="online-lobby">
+            <div class="section-title">
+              <h2>Online Room</h2>
+              <span id="connectionStatus">offline</span>
+            </div>
+            <label>
+              Room code
+              <input id="roomCode" value="ARENA-24" maxlength="16">
+            </label>
+            <div class="room-actions">
+              <button id="connectBtn" class="secondary">Connect</button>
+              <button id="readyBtn" class="primary">Ready</button>
+            </div>
+            <div id="squadList" class="squad-list"></div>
+          </div>
         </aside>
 
         <section class="game-panel">

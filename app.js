@@ -9,6 +9,11 @@ const ballTypeEl = document.querySelector("#ballType");
 const timingNeedle = document.querySelector("#timingNeedle");
 const insights = document.querySelector("#insights");
 const shotMap = document.querySelector("#shotMap");
+const connectionStatus = document.querySelector("#connectionStatus");
+const roomCode = document.querySelector("#roomCode");
+const connectBtn = document.querySelector("#connectBtn");
+const readyBtn = document.querySelector("#readyBtn");
+const squadList = document.querySelector("#squadList");
 
 const target = 18;
 let score = 0;
@@ -23,6 +28,10 @@ let ball = resetBall();
 let batterSwing = 0;
 let shots = [];
 let message = "Press Start Match";
+let socket;
+let playerId = `player-${Math.random().toString(16).slice(2, 8)}`;
+let roomPlayers = [];
+let ready = false;
 
 const deliveries = [
   { name: "Fast yorker", speed: 8.8, swing: -0.3, difficulty: 0.86 },
@@ -184,6 +193,78 @@ function renderShotMap() {
   });
 }
 
+function connectMultiplayer() {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    sendRoomMessage({ type: "join", roomId: roomCode.value.trim() || "ARENA-24", playerId });
+    return;
+  }
+
+  connectionStatus.textContent = "connecting";
+  socket = new WebSocket("ws://localhost:8787");
+
+  socket.addEventListener("open", () => {
+    connectionStatus.textContent = "online";
+    sendRoomMessage({ type: "join", roomId: roomCode.value.trim() || "ARENA-24", playerId });
+  });
+
+  socket.addEventListener("message", (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === "room_state") {
+      roomPlayers = data.players;
+      renderSquad();
+      if (data.canStart) {
+        message = "Room ready. Starting online match.";
+        updateHud();
+        setTimeout(startMatch, 500);
+      }
+    }
+    if (data.type === "state") {
+      message = "Remote player action synced.";
+      updateHud();
+    }
+  });
+
+  socket.addEventListener("close", () => {
+    connectionStatus.textContent = "offline";
+  });
+
+  socket.addEventListener("error", () => {
+    connectionStatus.textContent = "server off";
+  });
+}
+
+function toggleReady() {
+  ready = !ready;
+  readyBtn.textContent = ready ? "Unready" : "Ready";
+  sendRoomMessage({ type: "ready", roomId: roomCode.value.trim() || "ARENA-24", playerId, ready });
+}
+
+function sendRoomMessage(payload) {
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    connectionStatus.textContent = "offline";
+    return;
+  }
+  socket.send(JSON.stringify(payload));
+}
+
+function renderSquad() {
+  squadList.innerHTML = "";
+  if (!roomPlayers.length) {
+    squadList.innerHTML = "<div class=\"squad-card\"><strong>No squad yet</strong><span>connect</span></div>";
+    return;
+  }
+
+  roomPlayers.forEach((player, index) => {
+    const card = document.createElement("div");
+    card.className = "squad-card";
+    card.innerHTML = `
+      <strong>${player.playerId === playerId ? "You" : `Player ${index + 1}`}</strong>
+      <span class="${player.ready ? "ready-pill" : "waiting-pill"}">${player.ready ? "Ready" : "Waiting"}</span>
+    `;
+    squadList.appendChild(card);
+  });
+}
+
 function update() {
   timing += timingDirection * 0.018;
   if (timing >= 1 || timing <= 0) {
@@ -322,6 +403,8 @@ function loop() {
 document.querySelector("#startBtn").addEventListener("click", startMatch);
 document.querySelector("#resetBtn").addEventListener("click", startMatch);
 document.querySelector("#shotBtn").addEventListener("click", playShot);
+connectBtn.addEventListener("click", connectMultiplayer);
+readyBtn.addEventListener("click", toggleReady);
 
 window.addEventListener("keydown", (event) => {
   if (event.code === "Space") {
@@ -339,6 +422,7 @@ window.addEventListener("keyup", () => {
 
 updateHud();
 renderShotMap();
+renderSquad();
 loop();
 
 if ("serviceWorker" in navigator) {

@@ -3,6 +3,8 @@ const http = require("http");
 
 const PORT = process.env.PORT || 8787;
 const clients = new Set();
+const clientState = new Map();
+const rooms = new Map();
 
 const server = http.createServer((req, res) => {
   if (req.url === "/health") {
@@ -36,22 +38,75 @@ server.on("upgrade", (req, socket) => {
   ].join("\r\n"));
 
   clients.add(socket);
-  broadcast(JSON.stringify({ type: "presence", clients: clients.size }));
+  clientState.set(socket, { playerId: `player-${crypto.randomUUID().slice(0, 8)}`, roomId: "lobby", ready: false });
+  joinRoom(socket, "lobby");
 
   socket.on("data", (buffer) => {
     const message = decodeFrame(buffer);
     if (!message) return;
-    broadcast(JSON.stringify({ type: "state", payload: safeJson(message), clients: clients.size }), socket);
+    handleMessage(socket, safeJson(message));
   });
 
   socket.on("close", () => {
+    const state = clientState.get(socket);
     clients.delete(socket);
-    broadcast(JSON.stringify({ type: "presence", clients: clients.size }));
+    if (state) {
+      leaveRoom(socket, state.roomId);
+      clientState.delete(socket);
+    }
   });
 });
 
-function broadcast(message, except) {
-  for (const client of clients) {
+function handleMessage(socket, message) {
+  const current = clientState.get(socket);
+  if (!current) return;
+
+  if (message.type === "join") {
+    leaveRoom(socket, current.roomId);
+    current.roomId = String(message.roomId || "ARENA-24").slice(0, 24);
+    current.playerId = String(message.playerId || current.playerId).slice(0, 32);
+    current.ready = false;
+    joinRoom(socket, current.roomId);
+    broadcastRoomState(current.roomId);
+    return;
+  }
+
+  if (message.type === "ready") {
+    current.ready = Boolean(message.ready);
+    broadcastRoomState(current.roomId);
+    return;
+  }
+
+  if (message.type === "input") {
+    broadcastToRoom(current.roomId, JSON.stringify({ type: "state", playerId: current.playerId, payload: message }), socket);
+  }
+}
+
+function joinRoom(socket, roomId) {
+  if (!rooms.has(roomId)) rooms.set(roomId, new Set());
+  rooms.get(roomId).add(socket);
+}
+
+function leaveRoom(socket, roomId) {
+  const room = rooms.get(roomId);
+  if (!room) return;
+  room.delete(socket);
+  if (!room.size) rooms.delete(roomId);
+  else broadcastRoomState(roomId);
+}
+
+function broadcastRoomState(roomId) {
+  const room = rooms.get(roomId) || new Set();
+  const players = Array.from(room).map((client) => {
+    const state = clientState.get(client);
+    return { playerId: state?.playerId || "unknown", ready: Boolean(state?.ready) };
+  });
+  const canStart = players.length >= 2 && players.every((player) => player.ready);
+  broadcastToRoom(roomId, JSON.stringify({ type: "room_state", roomId, players, canStart }));
+}
+
+function broadcastToRoom(roomId, message, except) {
+  for (const client of rooms.get(roomId) || []) {
     if (client !== except && !client.destroyed) {
       client.write(encodeFrame(message));
     }

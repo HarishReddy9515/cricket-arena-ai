@@ -10,13 +10,13 @@ const serviceWorker = fs.readFileSync(path.join(root, "service-worker.js"), "utf
 const manifest = fs.readFileSync(path.join(root, "manifest.webmanifest"), "utf8");
 const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 
-for (const id of ["gameCanvas", "threeViewport", "toggle3dBtn", "startBtn", "shotBtn", "score", "equation", "shotMap"]) {
+for (const id of ["gameCanvas", "threeViewport", "toggle3dBtn", "startBtn", "shotBtn", "score", "equation", "shotMap", "roomCode", "connectBtn", "readyBtn", "squadList"]) {
   if (!html.includes(`id="${id}"`)) {
     throw new Error(`Missing DOM id: ${id}`);
   }
 }
 
-for (const symbol of ["startMatch", "queueDelivery", "playShot", "resolveOutcome", "drawStadium", "requestAnimationFrame"]) {
+for (const symbol of ["startMatch", "queueDelivery", "playShot", "resolveOutcome", "drawStadium", "requestAnimationFrame", "connectMultiplayer", "toggleReady", "renderSquad"]) {
   if (!js.includes(symbol)) {
     throw new Error(`Missing game workflow: ${symbol}`);
   }
@@ -28,7 +28,7 @@ for (const symbol of ["THREE", "buildStadium", "buildPlayers", "shadowMap", "Per
   }
 }
 
-for (const symbol of ["upgrade", "Sec-WebSocket-Accept", "broadcast", "decodeFrame"]) {
+for (const symbol of ["upgrade", "Sec-WebSocket-Accept", "broadcastRoomState", "joinRoom", "ready"]) {
   if (!server.includes(symbol)) {
     throw new Error(`Missing multiplayer server workflow: ${symbol}`);
   }
