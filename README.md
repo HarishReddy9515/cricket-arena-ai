@@ -21,6 +21,8 @@ The goal is to show how a future online cricket game could combine smooth gamepl
 - Create or join room code
 - Squad ready-state panel
 - Browser WebSocket client for room sync
+- Server-authoritative delivery generation
+- Server-validated shot outcomes and synced score state
 - Keyboard and button controls
 - PWA mobile install manifest and service worker
 - Dependency-free WebSocket multiplayer server scaffold
@@ -60,7 +62,8 @@ Online room demo:
 2. Start the multiplayer server on `8787`.
 3. Open the game in two browser tabs.
 4. Use the same room code, click `Connect`, then `Ready` in both tabs.
-5. When all players are ready, the client starts the match flow.
+5. When all players are ready, the server starts the match flow.
+6. Deliveries and shot outcomes are synced through the server match state.
 
 ## Controls
 
@@ -73,7 +76,7 @@ Online room demo:
 
 This prototype now includes a dependency-free WebSocket server scaffold in `server/multiplayer-server.js` plus browser room UI. A production online version would add:
 
-- authoritative ball physics on the server
+- deeper authoritative ball physics on the server
 - deterministic client prediction
 - lag compensation
 - friend rooms and matchmaking
@@ -81,6 +84,15 @@ This prototype now includes a dependency-free WebSocket server scaffold in `serv
 - player profiles and progression
 - anti-cheat validation for shot timing
 - replay system
+
+Implemented now:
+
+- room join and presence
+- ready state
+- server-created match state
+- server-selected deliveries
+- server-resolved shot outcomes
+- synced score, wickets, balls, delivery, and last outcome
 
 ## Graphics roadmap
 

@@ -32,6 +32,8 @@ let socket;
 let playerId = `player-${Math.random().toString(16).slice(2, 8)}`;
 let roomPlayers = [];
 let ready = false;
+let onlineMode = false;
+let awaitingServer = false;
 
 const deliveries = [
   { name: "Fast yorker", speed: 8.8, swing: -0.3, difficulty: 0.86 },
@@ -74,6 +76,13 @@ function queueDelivery() {
 
   deliveryActive = false;
   ball.visible = false;
+  if (onlineMode) {
+    message = "Waiting for server delivery...";
+    updateHud();
+    sendRoomMessage({ type: "request_delivery", roomId: roomCode.value.trim() || "ARENA-24", playerId });
+    return;
+  }
+
   const type = chooseDelivery();
   ballTypeEl.textContent = type.name;
   message = "Watch the bowler. Time your shot.";
@@ -106,6 +115,23 @@ function launchDelivery(type) {
 
 function playShot() {
   if (!deliveryActive || !running) return;
+
+  if (onlineMode) {
+    awaitingServer = true;
+    batterSwing = 1;
+    deliveryActive = false;
+    ball.visible = false;
+    message = "Shot sent to match server...";
+    sendRoomMessage({
+      type: "shot",
+      roomId: roomCode.value.trim() || "ARENA-24",
+      playerId,
+      timing,
+      intent: shotIntent
+    });
+    updateHud();
+    return;
+  }
 
   const contactZone = Math.abs(ball.y - 512);
   const timingError = Math.abs(timing - 0.5);
@@ -213,10 +239,13 @@ function connectMultiplayer() {
       roomPlayers = data.players;
       renderSquad();
       if (data.canStart) {
-        message = "Room ready. Starting online match.";
+        onlineMode = true;
+        message = "Room ready. Server match starting.";
         updateHud();
-        setTimeout(startMatch, 500);
       }
+    }
+    if (data.type === "match_state") {
+      applyServerMatch(data.match);
     }
     if (data.type === "state") {
       message = "Remote player action synced.";
@@ -231,6 +260,40 @@ function connectMultiplayer() {
   socket.addEventListener("error", () => {
     connectionStatus.textContent = "server off";
   });
+}
+
+function applyServerMatch(match) {
+  onlineMode = true;
+  running = !match.finished;
+  score = match.score;
+  wickets = match.wickets;
+  balls = match.balls;
+
+  if (match.lastOutcome && awaitingServer) {
+    shots.push(match.lastOutcome);
+    message = match.lastOutcome.message;
+    awaitingServer = false;
+    renderShotMap();
+  }
+
+  if (match.delivery) {
+    ballTypeEl.textContent = `${match.delivery.name} · server synced`;
+    message = "Server ball released";
+    launchDelivery(match.delivery);
+    return;
+  }
+
+  if (match.finished) {
+    finishMatch();
+    return;
+  }
+
+  updateHud();
+  setTimeout(() => {
+    if (onlineMode && running && !deliveryActive) {
+      queueDelivery();
+    }
+  }, 900);
 }
 
 function toggleReady() {

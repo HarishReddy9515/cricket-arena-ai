@@ -16,7 +16,7 @@ for (const id of ["gameCanvas", "threeViewport", "toggle3dBtn", "startBtn", "sho
   }
 }
 
-for (const symbol of ["startMatch", "queueDelivery", "playShot", "resolveOutcome", "drawStadium", "requestAnimationFrame", "connectMultiplayer", "toggleReady", "renderSquad"]) {
+for (const symbol of ["startMatch", "queueDelivery", "playShot", "resolveOutcome", "drawStadium", "requestAnimationFrame", "connectMultiplayer", "toggleReady", "renderSquad", "applyServerMatch", "request_delivery"]) {
   if (!js.includes(symbol)) {
     throw new Error(`Missing game workflow: ${symbol}`);
   }
@@ -28,7 +28,7 @@ for (const symbol of ["THREE", "buildStadium", "buildPlayers", "shadowMap", "Per
   }
 }
 
-for (const symbol of ["upgrade", "Sec-WebSocket-Accept", "broadcastRoomState", "joinRoom", "ready"]) {
+for (const symbol of ["upgrade", "Sec-WebSocket-Accept", "broadcastRoomState", "joinRoom", "ready", "broadcastMatchState", "request_delivery", "resolveOutcome"]) {
   if (!server.includes(symbol)) {
     throw new Error(`Missing multiplayer server workflow: ${symbol}`);
   }

@@ -5,6 +5,14 @@ const PORT = process.env.PORT || 8787;
 const clients = new Set();
 const clientState = new Map();
 const rooms = new Map();
+const roomMatches = new Map();
+
+const deliveries = [
+  { name: "Fast yorker", speed: 8.8, swing: -0.3, difficulty: 0.86 },
+  { name: "Outswinger", speed: 7.4, swing: 0.9, difficulty: 0.72 },
+  { name: "Leg cutter", speed: 6.7, swing: -1.1, difficulty: 0.78 },
+  { name: "Slower bouncer", speed: 5.9, swing: 0.2, difficulty: 0.66 }
+];
 
 const server = http.createServer((req, res) => {
   if (req.url === "/health") {
@@ -74,6 +82,32 @@ function handleMessage(socket, message) {
   if (message.type === "ready") {
     current.ready = Boolean(message.ready);
     broadcastRoomState(current.roomId);
+    maybeStartMatch(current.roomId);
+    return;
+  }
+
+  if (message.type === "request_delivery") {
+    const match = ensureMatch(current.roomId);
+    if (!match.delivery && !match.finished) {
+      match.delivery = chooseDelivery(match);
+      match.deliveryId = crypto.randomUUID();
+    }
+    broadcastMatchState(current.roomId);
+    return;
+  }
+
+  if (message.type === "shot") {
+    const match = ensureMatch(current.roomId);
+    if (!match.delivery || match.finished) return;
+    const outcome = resolveOutcome(match.delivery, Number(message.timing || 0), String(message.intent || "straight"));
+    match.score += outcome.runs;
+    match.wickets += outcome.wicket ? 1 : 0;
+    match.balls += 1;
+    match.lastOutcome = outcome;
+    match.delivery = null;
+    match.deliveryId = null;
+    match.finished = match.score >= match.target || match.balls >= 6 || match.wickets >= 2;
+    broadcastMatchState(current.roomId);
     return;
   }
 
@@ -105,6 +139,59 @@ function broadcastRoomState(roomId) {
   broadcastToRoom(roomId, JSON.stringify({ type: "room_state", roomId, players, canStart }));
 }
 
+function maybeStartMatch(roomId) {
+  const room = rooms.get(roomId) || new Set();
+  const players = Array.from(room).map((client) => clientState.get(client)).filter(Boolean);
+  if (players.length >= 2 && players.every((player) => player.ready)) {
+    roomMatches.set(roomId, createMatch());
+    broadcastMatchState(roomId);
+  }
+}
+
+function createMatch() {
+  return {
+    target: 18,
+    score: 0,
+    wickets: 0,
+    balls: 0,
+    delivery: null,
+    deliveryId: null,
+    lastOutcome: null,
+    finished: false
+  };
+}
+
+function ensureMatch(roomId) {
+  if (!roomMatches.has(roomId)) roomMatches.set(roomId, createMatch());
+  return roomMatches.get(roomId);
+}
+
+function chooseDelivery(match) {
+  const need = match.target - match.score;
+  if (need <= 6 && match.balls >= 3) return deliveries[0];
+  return deliveries[Math.floor(Math.random() * deliveries.length)];
+}
+
+function resolveOutcome(delivery, timing, intent) {
+  const timingError = Math.abs(timing - 0.5);
+  const timingScore = Math.max(0, 1 - timingError * 2.2);
+  const quality = timingScore - (delivery.difficulty - 0.65) * 0.18;
+  const baseAngle = intent === "left" ? 220 : intent === "right" ? 320 : 270;
+  const angle = baseAngle + Math.round((timing - 0.5) * 34);
+
+  if (quality < 0.18) return { runs: 0, wicket: true, message: "Edge! Caught behind.", angle, distance: 35 };
+  if (quality < 0.35) return { runs: 0, wicket: false, message: "Beaten. Dot ball.", angle, distance: 28 };
+  if (quality < 0.55) return { runs: 1, wicket: false, message: "Soft hands. Quick single.", angle, distance: 45 };
+  if (quality < 0.72) return { runs: 2, wicket: false, message: "Pierced the gap. Two runs.", angle, distance: 62 };
+  if (quality < 0.88) return { runs: 4, wicket: false, message: "Cracking boundary!", angle, distance: 82 };
+  return { runs: 6, wicket: false, message: "Massive six into the crowd!", angle, distance: 96 };
+}
+
+function broadcastMatchState(roomId) {
+  const match = ensureMatch(roomId);
+  broadcastToRoom(roomId, JSON.stringify({ type: "match_state", roomId, match }));
+}
+
 function broadcastToRoom(roomId, message, except) {
   for (const client of rooms.get(roomId) || []) {
     if (client !== except && !client.destroyed) {
@@ -115,8 +202,15 @@ function broadcastToRoom(roomId, message, except) {
 
 function decodeFrame(buffer) {
   const second = buffer[1];
-  const length = second & 127;
-  const maskStart = 2;
+  let length = second & 127;
+  let offset = 2;
+  if (length === 126) {
+    length = buffer.readUInt16BE(offset);
+    offset += 2;
+  } else if (length === 127) {
+    return "";
+  }
+  const maskStart = offset;
   const dataStart = maskStart + 4;
   const mask = buffer.subarray(maskStart, dataStart);
   const data = buffer.subarray(dataStart, dataStart + length);
@@ -132,10 +226,17 @@ function encodeFrame(message) {
   const frame = [0x81];
   if (payload.length < 126) {
     frame.push(payload.length);
+    return Buffer.concat([Buffer.from(frame), payload]);
+  }
+  if (payload.length < 65536) {
+    const header = Buffer.alloc(4);
+    header[0] = 0x81;
+    header[1] = 126;
+    header.writeUInt16BE(payload.length, 2);
+    return Buffer.concat([header, payload]);
   } else {
     throw new Error("Payload too large for demo server frame.");
   }
-  return Buffer.concat([Buffer.from(frame), payload]);
 }
 
 function safeJson(message) {
