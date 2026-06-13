@@ -5,6 +5,7 @@ const root = path.resolve(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const js = fs.readFileSync(path.join(root, "app.js"), "utf8");
 const three = fs.readFileSync(path.join(root, "three-scene.js"), "utf8");
+const immersion = fs.readFileSync(path.join(root, "immersion.js"), "utf8");
 const server = fs.readFileSync(path.join(root, "server", "multiplayer-server.js"), "utf8");
 const serviceWorker = fs.readFileSync(path.join(root, "service-worker.js"), "utf8");
 const manifest = fs.readFileSync(path.join(root, "manifest.webmanifest"), "utf8");
@@ -25,6 +26,12 @@ for (const symbol of ["startMatch", "queueDelivery", "playShot", "resolveOutcome
 for (const symbol of ["THREE", "buildStadium", "buildPlayers", "shadowMap", "PerspectiveCamera"]) {
   if (!three.includes(symbol)) {
     throw new Error(`Missing Three.js workflow: ${symbol}`);
+  }
+}
+
+for (const symbol of ["__arena4d", "vibrate", "camera-shake", "slowMotion", "setWeather"]) {
+  if (!immersion.includes(symbol)) {
+    throw new Error(`Missing 4D immersion workflow: ${symbol}`);
   }
 }
 

@@ -26,9 +26,9 @@ function initThreeStadium() {
   scene.background = new THREE.Color(0x061018);
   scene.fog = new THREE.Fog(0x061018, 60, 220);
 
-  camera = new THREE.PerspectiveCamera(55, viewport.clientWidth / viewport.clientHeight, 0.1, 500);
-  camera.position.set(0, 28, 68);
-  camera.lookAt(0, 2, 0);
+  camera = new THREE.PerspectiveCamera(62, viewport.clientWidth / viewport.clientHeight, 0.1, 500);
+  camera.position.set(0, 22, 58);
+  camera.lookAt(0, 1, 8);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setSize(viewport.clientWidth, viewport.clientHeight);
@@ -278,9 +278,12 @@ function buildPlayers() {
 
 function createPlayerGroup(color) {
   const group = new THREE.Group();
-  const kit   = new THREE.MeshStandardMaterial({ color, roughness: 0.5 });
-  const skin  = new THREE.MeshStandardMaterial({ color: 0xc58f62, roughness: 0.6 });
-  const white = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.55 });
+  const kit    = new THREE.MeshStandardMaterial({ color, roughness: 0.5 });
+  const helmet = new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.2 });
+  const skin   = new THREE.MeshStandardMaterial({ color: 0xc58f62, roughness: 0.6 });
+  const white  = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, roughness: 0.55 });
+  group.userData.kitMat    = kit;
+  group.userData.helmetMat = helmet;
 
   // Body
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.78, 1.8, 8, 14), kit);
@@ -292,13 +295,10 @@ function createPlayerGroup(color) {
   head.castShadow = true; head.position.y = 3.6;
   group.add(head);
 
-  const helmet = new THREE.Mesh(
-    new THREE.SphereGeometry(0.56, 18, 18),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.3, metalness: 0.2 })
-  );
-  helmet.scale.y = 0.72;
-  helmet.position.y = 3.78;
-  group.add(helmet);
+  const helmetMesh = new THREE.Mesh(new THREE.SphereGeometry(0.56, 18, 18), helmet);
+  helmetMesh.scale.y = 0.72;
+  helmetMesh.position.y = 3.78;
+  group.add(helmetMesh);
 
   // Visor
   const visor = new THREE.Mesh(
@@ -399,6 +399,12 @@ function updateScoreboard(score, overs, need) {
   scoreboardTexture.needsUpdate = true;
 }
 
+// ─── External game sync state ─────────────────────────────────────────────────
+let _extBallP    = null; // 0-1 progress during shot arc (null = autonomous idle)
+let _extBallX    = 0;    // 3D world x-offset after shot (-18 to +18)
+let _extBallArcH = 5;    // arc height in 3D units
+let _extSwingT   = 0;    // batter swing factor (1 = full swing, decays each frame)
+
 // ─── Animate ──────────────────────────────────────────────────────────────────
 const trailPositions = [];
 let celebTimer  = 0;
@@ -421,12 +427,22 @@ function animate() {
 function animatePlayers(t) {
   if (!batter3d || !bowler3d) return;
 
-  // Batter — subtle idle sway
-  batter3d.rotation.y = Math.sin(t * 1.4) * 0.06;
   const armR = batter3d.userData.armR;
   const armL = batter3d.userData.armL;
-  if (armR) armR.rotation.z = -0.4 + Math.sin(t * 2.5) * 0.12;
-  if (armL) armL.rotation.z =  0.4 - Math.sin(t * 2.5) * 0.12;
+
+  if (_extSwingT > 0.04) {
+    // Game-driven batting swing: full cricket sweep motion
+    const sw = Math.sin(_extSwingT * Math.PI * 0.5);
+    batter3d.rotation.y = Math.sin(_extSwingT * Math.PI) * 0.35;
+    if (armR) { armR.rotation.z = -0.4 - sw * 1.6; armR.rotation.x = sw * 0.8; }
+    if (armL) { armL.rotation.z =  0.4 + sw * 1.0; armL.rotation.x = sw * 0.5; }
+    _extSwingT = Math.max(0, _extSwingT - 0.035);
+  } else {
+    // Idle sway when not swinging
+    batter3d.rotation.y = Math.sin(t * 1.4) * 0.06;
+    if (armR) armR.rotation.z = -0.4 + Math.sin(t * 2.5) * 0.12;
+    if (armL) armL.rotation.z =  0.4 - Math.sin(t * 2.5) * 0.12;
+  }
 
   // Bowler — run-up + delivery arm swing
   bowler3d.position.z = -22 + Math.sin(t * 1.8) * 1.4;
@@ -443,12 +459,22 @@ function animatePlayers(t) {
 
 function animateBall(t) {
   if (!ball3d) return;
-  // Simulate ball flying between players
-  const cycleT = (t * 0.6) % 1;
-  const z = -22 + cycleT * 44;      // bowler end (-22) → batter end (+22)
-  const arc = Math.sin(cycleT * Math.PI) * 5;
-  const swingX = Math.sin(cycleT * Math.PI * 2) * 1.2;
-  ball3d.position.set(swingX, 0.6 + arc, z);
+
+  if (_extBallP !== null) {
+    // Game-driven ball flight after shot: batter end → outfield
+    const p   = _extBallP;
+    const z   = 22 - p * 44;                        // +22 (batter) → -22 (field)
+    const arc = Math.sin(p * Math.PI) * _extBallArcH;
+    ball3d.position.set(_extBallX, 0.6 + arc, z);
+  } else {
+    // Autonomous idle animation: bowler → batter → bowler cycle
+    const cycleT = (t * 0.6) % 1;
+    const z      = -22 + cycleT * 44;
+    const arc    = Math.sin(cycleT * Math.PI) * 5;
+    const swingX = Math.sin(cycleT * Math.PI * 2) * 1.2;
+    ball3d.position.set(swingX, 0.6 + arc, z);
+  }
+
   ball3d.rotation.x += 0.18;
   ball3d.rotation.z += 0.1;
 
@@ -483,16 +509,23 @@ function animateCrowd(t) {
 export function celebrateWicket() {
   if (!stumpGroupBat) return;
   celebTimer = 1.5;
-  // Knock bails off (tilt the group)
+  // Knock bails off (tilt the group dramatically)
   new Array(8).fill(0).forEach((_, i) => {
     setTimeout(() => {
       if (stumpGroupBat) {
-        stumpGroupBat.rotation.z = Math.sin(i) * 0.3;
-        stumpGroupBat.position.y = i < 4 ? i * 0.05 : 0;
+        stumpGroupBat.rotation.z = Math.sin(i) * 0.45;
+        stumpGroupBat.rotation.x = i < 4 ? i * 0.08 : 0;
+        stumpGroupBat.position.y = i < 4 ? i * 0.06 : 0;
       }
     }, i * 80);
   });
-  setTimeout(() => { if (stumpGroupBat) { stumpGroupBat.rotation.z = 0; stumpGroupBat.position.y = 0; } }, 900);
+  setTimeout(() => {
+    if (stumpGroupBat) {
+      stumpGroupBat.rotation.z = 0;
+      stumpGroupBat.rotation.x = 0;
+      stumpGroupBat.position.y = 0;
+    }
+  }, 900);
 }
 
 // ─── Scoreboard update called from app.js ─────────────────────────────────────
@@ -508,18 +541,38 @@ function resize() {
   renderer.setSize(viewport.clientWidth, viewport.clientHeight);
 }
 
-// Expose scoreboard sync globally so app.js (non-module) can call it
-window.__syncScoreboard = syncScoreboard;
+// ─── Global sync hooks (called from app.js non-module code) ──────────────────
+window.__syncScoreboard    = syncScoreboard;
+window.__syncBall          = (p, xOff, arcH) => {
+  _extBallP    = (p < 0.99) ? p : null;
+  _extBallX    = xOff  || 0;
+  _extBallArcH = arcH  || 5;
+};
+window.__syncBatterSwing   = t => { _extSwingT = Math.max(_extSwingT, t); };
+window.__celebrateWicket3d = celebrateWicket;
+window.__syncJerseyColor   = hex => {
+  if (!batter3d) return;
+  const c = new THREE.Color(hex);
+  const d = batter3d.userData;
+  if (d.kitMat)    d.kitMat.color.set(c);
+  if (d.helmetMat) d.helmetMat.color.set(c);
+};
 
-// ─── Toggle 2D / 3D ───────────────────────────────────────────────────────────
+// ─── Auto-init 3D on page load + toggle ──────────────────────────────────────
+// Module scripts are deferred so the DOM is ready when this runs
+if (viewport) {
+  active = true;
+  viewport.classList.add('active');
+  initThreeStadium();
+  resize();
+  if (toggle) toggle.textContent = '2D Mode';
+}
+
 toggle?.addEventListener('click', () => {
   active = !active;
   viewport.classList.toggle('active', active);
-  toggle.textContent = active ? '2D Gameplay' : '3D Stadium';
-  if (active) {
-    initThreeStadium();
-    resize();
-  }
+  toggle.textContent = active ? '2D Mode' : '3D Mode';
+  if (active) { initThreeStadium(); resize(); }
 });
 
 window.addEventListener('resize', resize);

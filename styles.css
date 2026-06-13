@@ -307,13 +307,16 @@ kbd {
 canvas {
   width: 100%;
   display: block;
-  background: #122314;
+  position: relative;
+  z-index: 2;      /* sit above the 3D viewport */
+  background: transparent; /* let 3D scene show through */
 }
 
 .viewport {
   position: relative;
   min-height: 360px;
-  background: #122314;
+  background: #061018; /* dark fallback before 3D loads */
+  overflow: hidden;
 }
 
 /* ─── Toss overlay ─────────────────────────────────────────────────────────── */
@@ -385,6 +388,7 @@ canvas {
   inset: 0;
   display: none;
   background: #061018;
+  z-index: 1; /* below the 2D canvas overlay */
 }
 
 .three-viewport.active {
@@ -403,6 +407,112 @@ canvas {
   place-items: center;
   color: white;
   font-weight: 900;
+}
+
+.immersion-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+}
+
+.impact-flash,
+.crowd-pulse,
+.weather-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.impact-flash {
+  opacity: 0;
+  mix-blend-mode: screen;
+}
+
+.impact-hit .impact-flash {
+  animation: impactFlash 360ms ease-out;
+  background: radial-gradient(circle at 50% 72%, rgba(255, 255, 255, 0.48), transparent 34%);
+}
+
+.impact-six .impact-flash {
+  animation: impactFlash 520ms ease-out;
+  background: radial-gradient(circle at 50% 54%, rgba(255, 210, 92, 0.62), transparent 42%);
+}
+
+.impact-wicket .impact-flash {
+  animation: impactFlash 620ms ease-out;
+  background: radial-gradient(circle at 50% 68%, rgba(255, 60, 60, 0.58), transparent 44%);
+}
+
+.crowd-pulse {
+  opacity: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, calc(0.12 * var(--crowd-power, 1))), transparent 56%);
+}
+
+.crowd-live .crowd-pulse {
+  animation: crowdPulse 900ms ease-out;
+}
+
+.particle {
+  position: absolute;
+  top: -16px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  opacity: 0.75;
+  animation: particleFall 1600ms linear forwards;
+}
+
+.particle.dust {
+  top: auto;
+  bottom: 18%;
+  background: rgba(218, 174, 99, 0.78);
+  animation: dustBurst 1200ms ease-out forwards;
+}
+
+.particle.rain {
+  width: 2px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(185, 226, 255, 0.78);
+}
+
+.camera-shake {
+  animation: cameraShake 380ms cubic-bezier(.36,.07,.19,.97);
+}
+
+.slow-mo .game-panel {
+  filter: saturate(1.12) contrast(1.04);
+}
+
+@keyframes impactFlash {
+  0% { opacity: 0; }
+  18% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes crowdPulse {
+  0% { opacity: 0; transform: scale(0.96); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.08); }
+}
+
+@keyframes particleFall {
+  from { transform: translate3d(0, -20px, 0); opacity: 0; }
+  12% { opacity: 0.85; }
+  to { transform: translate3d(var(--drift), 720px, 0); opacity: 0; }
+}
+
+@keyframes dustBurst {
+  from { transform: translate3d(0, 0, 0) scale(0.8); opacity: 0.85; }
+  to { transform: translate3d(var(--drift), -120px, 0) scale(1.6); opacity: 0; }
+}
+
+@keyframes cameraShake {
+  10%, 90% { transform: translate3d(calc(var(--shake-x, 6px) * -0.5), 0, 0); }
+  20%, 80% { transform: translate3d(var(--shake-x, 6px), 0, 0); }
+  30%, 50%, 70% { transform: translate3d(calc(var(--shake-x, 6px) * -1), 0, 0); }
+  40%, 60% { transform: translate3d(var(--shake-x, 6px), 0, 0); }
 }
 
 .playbar {

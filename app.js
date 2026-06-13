@@ -248,6 +248,8 @@ function loadProfile() {
     playerTiming = p.timing || 1.0;
     playerTech   = p.tech   || 1.0;
   } catch {}
+  // Sync jersey color to 3D once Three.js is ready (slight delay for module init)
+  setTimeout(() => window.__syncJerseyColor?.(jerseyColor), 1200);
 }
 
 function saveProfile() {
@@ -375,6 +377,8 @@ function checkMilestones(prevScore, newScore) {
 // ─── Wicket celebration ───────────────────────────────────────────────────────
 function triggerWicketCelebration() {
   wicketCelebration = { timer: 2.8 };
+  window.__celebrateWicket3d?.();
+  window.__arena4d?.wicket?.();
   crowdRoar(1.5);
   const cx = canvas.width / 2;
   fielders.forEach((f, i) => {
@@ -983,6 +987,7 @@ function saveCustomise() {
   playerTiming = parseFloat(document.querySelector('#statTiming').value);
   playerTech   = parseFloat(document.querySelector('#statTech').value);
   saveProfile();
+  window.__syncJerseyColor?.(jerseyColor); // update 3D batter jersey
   closeCustomiseModal();
   // Refresh avatar + name in sidebar
   const avatar = document.querySelector('.avatar');
@@ -1131,6 +1136,7 @@ function playShot() {
   const qualityPenalty = (adaptiveDifficulty - 1.0) * 0.08;
   const quality = Math.max(0, rawQ - qualityPenalty);
   const out     = resolveOutcome(quality);
+  window.__arena4d?.shot?.(out);
 
   // Record player pattern data for AI learning
   recordPlayerBall(ball.type.name, quality, out);
@@ -1666,6 +1672,9 @@ function update() {
 
   batterSwing *= 0.86;
   aiSwing     *= 0.86;
+  if (batterSwing > 0.04 || aiSwing > 0.04) {
+    window.__syncBatterSwing?.(Math.max(batterSwing, aiSwing));
+  }
 
   // Fielder movement (smooth interpolation toward target)
   const dt = 0.016;
@@ -1700,11 +1709,19 @@ function update() {
 // ─── Drawing ─────────────────────────────────────────────────────────────────
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawStadium(); drawPitch();
-  drawFielders();
-  if (phase === 'bowling') drawAimGuide();
-  drawPlayers();
-  if (ballArc) drawBallArc(); else drawBall();
+  const use3d = document.querySelector('#threeViewport')?.classList.contains('active');
+  if (!use3d) {
+    drawStadium(); drawPitch();
+    drawFielders();
+    if (phase === 'bowling') drawAimGuide();
+    drawPlayers();
+    if (ballArc) drawBallArc(); else drawBall();
+  } else {
+    // 3D is rendering world; still call drawBallArc for the __syncBall hook
+    if (ballArc) drawBallArc();
+    // Draw minimal aim guide for bowling in 3D mode (no stadium behind it)
+    if (phase === 'bowling') drawAimGuide();
+  }
   drawOverlay();
   drawBatterCard();
   drawPowerPlayBadge();
@@ -2169,6 +2186,11 @@ function drawBallArc() {
   const x    = ballArc.sx + (ballArc.ex - ballArc.sx) * p;
   const arcH = ballArc.height * Math.sin(p * Math.PI);
   const y    = ballArc.sy + (ballArc.ey - ballArc.sy) * p - arcH;
+
+  // Sync ball flight to 3D scene
+  const xOff3d = ((ballArc.ex - canvas.width / 2) / (canvas.width / 2)) * 18;
+  const arcH3d = Math.max(2, (ballArc.height / 220) * 12);
+  window.__syncBall?.(p, xOff3d, arcH3d);
 
   // Motion trail (4 ghost balls fading out)
   for (let i = 1; i <= 4; i++) {

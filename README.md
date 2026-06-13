@@ -29,6 +29,7 @@ The goal is to show how a future online cricket game could combine smooth gamepl
 - Keyboard and button controls
 - PWA mobile install manifest and service worker
 - Dependency-free WebSocket multiplayer server scaffold
+- 4D-style immersion layer with mobile haptics, impact flash, camera shake, dust/rain particles, crowd pulse, and slow-motion moments
 - No dependencies or build step
 
 ## Run
@@ -109,6 +110,19 @@ The 3D mode uses procedural Three.js geometry. To reach true AAA graphics, the n
 - physically based materials
 - crowd and broadcast camera packages
 - mobile-optimized LOD meshes and texture compression
+
+## 4D-style roadmap
+
+The project now includes browser-safe 4D-style feedback:
+
+- vibration/haptic patterns on supported mobile devices
+- camera shake on bat impact and wickets
+- impact flashes for boundaries and wickets
+- procedural dust/rain particles
+- crowd pulse effects
+- slow-motion highlight moments
+
+True physical 4D requires native mobile or console hardware integrations. This web version provides the closest safe browser equivalent.
 
 ## Why this belongs in a portfolio
 
