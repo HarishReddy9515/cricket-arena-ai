@@ -20,6 +20,8 @@
           <button id="bowlNowBtn" class="secondary">Bowl Now</button>
           <button id="seriesBtn" class="secondary">3-Match Series</button>
           <button id="toggle3dBtn" class="secondary">3D Stadium</button>
+          <button id="customiseBtn" class="secondary">Customise</button>
+          <button id="themeBtn" class="secondary">☀️ Light</button>
           <button id="resetBtn" class="secondary">Reset</button>
         </div>
       </section>
@@ -71,6 +73,11 @@
               <button id="clearCareerBtn" class="secondary" style="font-size:0.78rem;min-height:30px;padding:0 10px">Reset</button>
             </div>
             <div id="careerStats"></div>
+            <div class="section-title" style="margin-top:14px">
+              <h2>Match History</h2>
+              <button id="matchHistoryToggle" class="secondary" style="font-size:0.78rem;min-height:30px;padding:0 10px">▾</button>
+            </div>
+            <div id="matchHistory" class="match-history"></div>
           </div>
 
           <!-- Online / LAN lobby -->
@@ -194,6 +201,43 @@
         </aside>
       </section>
     </main>
+
+    <!-- Player Customise Modal -->
+    <div id="customiseModal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Customise player">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 style="margin:0">Customise Player</h2>
+          <button id="customiseClose" class="icon-btn" aria-label="Close">✕</button>
+        </div>
+        <label class="modal-label">Team name
+          <input id="profileName" type="text" maxlength="20" value="Harish XI">
+        </label>
+        <div class="modal-label">Jersey colour
+          <div class="jersey-swatches">
+            <span class="jersey-swatch selected" data-color="#0a66c2" style="background:#0a66c2" title="Blue"></span>
+            <span class="jersey-swatch" data-color="#c63d3d" style="background:#c63d3d" title="Red"></span>
+            <span class="jersey-swatch" data-color="#16834f" style="background:#16834f" title="Green"></span>
+            <span class="jersey-swatch" data-color="#b67817" style="background:#b67817" title="Gold"></span>
+            <span class="jersey-swatch" data-color="#7b3fc4" style="background:#7b3fc4" title="Purple"></span>
+            <span class="jersey-swatch" data-color="#e07020" style="background:#e07020" title="Orange"></span>
+          </div>
+        </div>
+        <div class="stat-row">
+          <label>Power <span id="labelPower" class="stat-badge">Med</span></label>
+          <input id="statPower" type="range" min="0.7" max="1.3" step="0.1" value="1.0">
+        </div>
+        <div class="stat-row">
+          <label>Timing <span id="labelTiming" class="stat-badge">Med</span></label>
+          <input id="statTiming" type="range" min="0.7" max="1.3" step="0.1" value="1.0">
+        </div>
+        <div class="stat-row">
+          <label>Technique <span id="labelTech" class="stat-badge">Med</span></label>
+          <input id="statTech" type="range" min="0.7" max="1.3" step="0.1" value="1.0">
+        </div>
+        <p class="modal-hint">Higher stats increase performance · all capped for fair balance</p>
+        <button id="customiseSave" class="primary" style="width:100%;margin-top:4px">Save &amp; Play</button>
+      </div>
+    </div>
 
     <script src="app.js"></script>
     <script type="module" src="three-scene.js"></script>
