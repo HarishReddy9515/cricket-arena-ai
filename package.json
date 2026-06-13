@@ -1,0 +1,12 @@
+{
+  "name": "cricket-arena-ai",
+  "version": "2.0.0",
+  "description": "Browser cricket game with LAN multiplayer — Quick Match, T20, ODI",
+  "scripts": {
+    "start": "node server/multiplayer-server.js",
+    "server": "node server/multiplayer-server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

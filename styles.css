@@ -316,6 +316,70 @@ canvas {
   background: #122314;
 }
 
+/* ─── Toss overlay ─────────────────────────────────────────────────────────── */
+.toss-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 12, 22, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 40;
+  border-radius: 8px;
+  animation: tossIn 0.25s ease;
+}
+
+@keyframes tossIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.toss-card {
+  background: linear-gradient(160deg, #0e1e30 0%, #1a2f42 100%);
+  border: 1px solid rgba(182, 120, 23, 0.45);
+  border-radius: 16px;
+  padding: 36px 52px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
+  max-width: 420px;
+  width: 90%;
+}
+
+.toss-coin {
+  font-size: 3rem;
+  margin-bottom: 8px;
+  display: block;
+  animation: coinSpin 0.7s ease 0.1s both;
+}
+
+@keyframes coinSpin {
+  0%   { transform: rotateY(0deg) scale(0.5); }
+  60%  { transform: rotateY(720deg) scale(1.15); }
+  100% { transform: rotateY(720deg) scale(1); }
+}
+
+.toss-card h2 {
+  font-size: 1.9rem;
+  margin: 0 0 8px;
+  color: #f5c842;
+  letter-spacing: 0.03em;
+}
+
+.toss-card p {
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 26px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.toss-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 .three-viewport {
   position: absolute;
   inset: 0;
@@ -413,6 +477,7 @@ canvas {
   border-radius: 999px;
   background: var(--ink);
   left: 0;
+  will-change: left;
 }
 
 .insights {
@@ -451,36 +516,263 @@ canvas {
   transform: translate(-50%, -50%);
 }
 
+/* ─── Career stats ──────────────────────────────────────────────────────── */
+.career-stats {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+#careerStats {
+  display: grid;
+  gap: 5px;
+}
+
+.career-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fbfcfd;
+  font-size: 0.84rem;
+}
+
+.career-row strong {
+  color: var(--blue);
+  font-weight: 900;
+}
+
+/* ─── Controls label ────────────────────────────────────────────────────── */
+.controls-label {
+  margin: 10px 0 4px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* ─── Bowling controls panel ────────────────────────────────────────────── */
+.bowl-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  background: #f0f6ff;
+}
+
+.delivery-selector > span,
+.aim-wrap > span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin-bottom: 7px;
+}
+
+.delivery-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.delivery-btn {
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 3px 9px;
+  background: white;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.delivery-btn.active {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: white;
+}
+
+.delivery-btn:hover:not(.active) {
+  border-color: var(--blue);
+  background: #e8f2fc;
+}
+
+.aim-meter {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--red), var(--gold), var(--green), var(--gold), var(--red));
+  overflow: visible;
+}
+
+#aimIndicator {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 8px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--green);
+  transform: translateX(-50%);
+  transition: left 0.1s, background 0.2s;
+}
+
 @media (max-width: 1180px) {
   .arena-layout {
     grid-template-columns: 1fr;
   }
 }
 
+/* ─── LAN info box ──────────────────────────────────────────────────────── */
+.lan-info {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f0f8ff;
+}
+
+.lan-label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+
+.lan-steps {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.lan-steps code {
+  background: #ddeeff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.lan-steps strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--green);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+/* ─── Touch-optimized buttons ───────────────────────────────────────────── */
+.primary, .secondary {
+  min-height: 48px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Mobile ≤ 720px ────────────────────────────────────────────────────── */
 @media (max-width: 720px) {
   .shell {
-    padding: 10px;
+    padding: 8px;
   }
 
   .hero {
-    min-height: 380px;
+    min-height: auto;
     flex-direction: column;
     align-items: flex-start;
+    padding: 20px;
   }
 
-  .hero-actions,
-  .playbar {
+  h1 {
+    font-size: clamp(2rem, 12vw, 3.6rem);
+  }
+
+  .hero-actions {
     width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .hero-actions button {
+    flex: 1 1 calc(50% - 5px);
+  }
+
+  .arena-layout {
     grid-template-columns: 1fr;
-    flex-direction: column;
+  }
+
+  .playbar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .playbar .timing-wrap {
+    width: 100%;
+  }
+
+  .playbar #shotBtn {
+    width: 100%;
+    min-height: 56px;
+    font-size: 1.1rem;
+  }
+
+  .bowl-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .delivery-btn {
+    min-height: 40px;
+    font-size: 0.85rem;
+    padding: 6px 12px;
   }
 
   .scorebar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .scorecard-grid,
+  .scorecard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .replay-item {
-    grid-template-columns: 1fr;
+    grid-template-columns: 60px 1fr auto;
+    font-size: 0.8rem;
+  }
+
+  canvas {
+    touch-action: none;
+  }
+
+  /* Make viewport full-width on mobile with fixed aspect */
+  .viewport {
+    min-height: 220px;
+  }
+
+  #gameCanvas {
+    height: auto;
+  }
+}
+
+/* ─── Very small screens ≤ 420px ────────────────────────────────────────── */
+@media (max-width: 420px) {
+  .scorecard-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .scorebar strong {
+    font-size: 1.2rem;
+  }
+
+  .delivery-btns {
+    flex-direction: column;
+  }
+
+  .delivery-btn {
+    width: 100%;
   }
 }

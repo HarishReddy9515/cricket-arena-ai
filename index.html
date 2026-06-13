@@ -13,10 +13,12 @@
         <div>
           <p class="eyebrow">Original cricket game prototype</p>
           <h1>Cricket Arena AI</h1>
-          <p class="subtitle">Fast arcade cricket with timing-based batting, AI bowling, match pressure, and multiplayer-ready architecture.</p>
+          <p class="subtitle">Batting, bowling, AI opponents, T20 &amp; ODI formats, career stats, and LAN multiplayer over any WiFi or hotspot — no install needed.</p>
         </div>
         <div class="hero-actions">
-          <button id="startBtn" class="primary">Start Match</button>
+          <button id="startBtn" class="primary">Chase Target</button>
+          <button id="bowlNowBtn" class="secondary">Bowl Now</button>
+          <button id="seriesBtn" class="secondary">3-Match Series</button>
           <button id="toggle3dBtn" class="secondary">3D Stadium</button>
           <button id="resetBtn" class="secondary">Reset</button>
         </div>
@@ -32,33 +34,65 @@
             </div>
           </div>
 
-          <div class="mode-card active">
+          <!-- Match mode selection -->
+          <div class="mode-card active" data-mode="quick">
             <strong>Quick Match</strong>
-            <span>1 over chase, AI opponent</span>
+            <span>1 over chase · 2 wickets</span>
           </div>
-          <div class="mode-card">
-            <strong>Online Arena</strong>
-            <span>Socket server ready in roadmap</span>
+          <div class="mode-card" data-mode="t20">
+            <strong>T20</strong>
+            <span>20 overs · 10 wickets</span>
           </div>
-          <div class="mode-card">
-            <strong>Career Mode</strong>
-            <span>Player progression concept</span>
+          <div class="mode-card" data-mode="odi">
+            <strong>ODI</strong>
+            <span>50 overs · classic format</span>
           </div>
 
+          <!-- Controls -->
           <div class="controls">
             <h2>Controls</h2>
-            <p><kbd>Space</kbd> shot timing</p>
-            <p><kbd>A</kbd> loft left</p>
-            <p><kbd>D</kbd> loft right</p>
-            <p><kbd>S</kbd> defensive tap</p>
+            <p class="controls-label">Batting — Keyboard</p>
+            <p><kbd>Space</kbd> play shot</p>
+            <p><kbd>A</kbd> loft left &nbsp;·&nbsp; <kbd>D</kbd> loft right &nbsp;·&nbsp; <kbd>S</kbd> defend</p>
+            <p class="controls-label">Batting — Touch / Mobile</p>
+            <p>Tap canvas to play shot</p>
+            <p>Swipe ← / → to set direction</p>
+            <p class="controls-label">Bowling — Keyboard</p>
+            <p><kbd>1</kbd>–<kbd>6</kbd> select delivery</p>
+            <p><kbd>A</kbd> / <kbd>D</kbd> aim &nbsp;·&nbsp; <kbd>Space</kbd> release</p>
+            <p class="controls-label">Bowling — Touch</p>
+            <p>Swipe ← / → to aim · Tap to release</p>
           </div>
 
+          <!-- Career stats -->
+          <div class="career-stats">
+            <div class="section-title">
+              <h2>Career</h2>
+              <button id="clearCareerBtn" class="secondary" style="font-size:0.78rem;min-height:30px;padding:0 10px">Reset</button>
+            </div>
+            <div id="careerStats"></div>
+          </div>
+
+          <!-- Online / LAN lobby -->
           <div class="online-lobby">
             <div class="section-title">
-              <h2>Online Room</h2>
+              <h2>Multiplayer</h2>
               <span id="connectionStatus">offline</span>
             </div>
+
+            <!-- LAN info -->
+            <div class="lan-info">
+              <span class="lan-label">WiFi / Hotspot play</span>
+              <p class="lan-steps">1&nbsp; Run: <code>npm start</code> on host device<br>
+              2&nbsp; Share the URL below with friends on same network:<br>
+              <strong id="lanUrlDisplay">connect to see LAN URL</strong></p>
+            </div>
+
             <label>
+              Server (host:port or ws://ip:8787)
+              <input id="serverHost" value="localhost:8787" placeholder="e.g. 192.168.1.5:8787">
+            </label>
+            <label style="margin-top:8px">
               Room code
               <input id="roomCode" value="ARENA-24" maxlength="16">
             </label>
@@ -89,7 +123,7 @@
               <strong id="score">0/0</strong>
             </div>
             <div>
-              <span>Balls</span>
+              <span>Overs</span>
               <strong id="balls">0.0</strong>
             </div>
             <div>
@@ -103,18 +137,43 @@
             <div id="threeViewport" class="three-viewport" aria-label="3D cricket stadium preview">
               <div class="three-fallback">Loading 3D stadium...</div>
             </div>
+            <!-- Toss overlay (shown for T20/ODI) -->
+            <div id="tossOverlay" class="toss-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="Match toss">
+              <div class="toss-card">
+                <div class="toss-coin">🪙</div>
+                <h2 id="tossTitle">TOSS TIME!</h2>
+                <p id="tossSubtitle">Call it in the air — heads or tails?</p>
+                <div id="tossActions" class="toss-actions">
+                  <button id="tossHeadsBtn" class="primary">Heads</button>
+                  <button id="tossTailsBtn" class="secondary">Tails</button>
+                </div>
+              </div>
+            </div>
           </div>
 
+          <!-- Shared playbar: timing meter + action button -->
           <div class="playbar">
             <div>
               <span id="ballType">Waiting for bowler</span>
-              <strong id="status">Press Start Match</strong>
+              <strong id="status">Press Chase Target or Bowl Now</strong>
             </div>
             <div class="timing-wrap">
               <span>Timing</span>
               <div class="timing-meter"><div id="timingNeedle"></div></div>
             </div>
             <button id="shotBtn" class="primary">Play Shot</button>
+          </div>
+
+          <!-- Bowling-phase controls (hidden until bowling starts) -->
+          <div id="bowlControls" class="bowl-controls" style="display:none">
+            <div class="delivery-selector">
+              <span>Delivery &nbsp;<kbd>1</kbd>–<kbd>6</kbd></span>
+              <div id="deliveryBtns" class="delivery-btns"></div>
+            </div>
+            <div class="aim-wrap">
+              <span>Aim &nbsp;<kbd>A</kbd> <kbd>D</kbd></span>
+              <div class="aim-meter"><div id="aimIndicator"></div></div>
+            </div>
           </div>
 
           <div class="scorecard">
@@ -139,8 +198,8 @@
     <script src="app.js"></script>
     <script type="module" src="three-scene.js"></script>
     <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./service-worker.js').catch(() => {});
       }
     </script>
   </body>
