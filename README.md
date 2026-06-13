@@ -46,6 +46,12 @@ Then visit:
 http://localhost:8090
 ```
 
+For the actual fullscreen game feel, open:
+
+```text
+http://localhost:8090/play.html
+```
+
 The 2D game works from the local files. The optional 3D stadium mode loads Three.js from a CDN, so it needs internet access unless Three.js is vendored into the project.
 
 Run the multiplayer server scaffold:

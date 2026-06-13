@@ -3,6 +3,8 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const playHtml = fs.readFileSync(path.join(root, "play.html"), "utf8");
+const playJs = fs.readFileSync(path.join(root, "play.js"), "utf8");
 const js = fs.readFileSync(path.join(root, "app.js"), "utf8");
 const three = fs.readFileSync(path.join(root, "three-scene.js"), "utf8");
 const immersion = fs.readFileSync(path.join(root, "immersion.js"), "utf8");
@@ -14,6 +16,18 @@ const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
 for (const id of ["gameCanvas", "threeViewport", "toggle3dBtn", "startBtn", "shotBtn", "score", "equation", "shotMap", "roomCode", "connectBtn", "readyBtn", "squadList", "pingStatus", "pingBtn", "scorecardGrid", "replayTimeline", "exportSummaryBtn"]) {
   if (!html.includes(`id="${id}"`)) {
     throw new Error(`Missing DOM id: ${id}`);
+  }
+}
+
+for (const id of ["arena", "playBtn", "score", "need", "mobileControls"]) {
+  if (!playHtml.includes(`id="${id}"`)) {
+    throw new Error(`Missing fullscreen play DOM id: ${id}`);
+  }
+}
+
+for (const symbol of ["function start", "function bowl", "function playShot", "function drawStadium", "requestAnimationFrame"]) {
+  if (!playJs.includes(symbol)) {
+    throw new Error(`Missing fullscreen gameplay workflow: ${symbol}`);
   }
 }
 

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Cricket Arena AI - Play</title>
+    <link rel="stylesheet" href="play.css">
+  </head>
+  <body>
+    <main class="game">
+      <canvas id="arena" width="1280" height="720" aria-label="Fullscreen cricket arena"></canvas>
+
+      <section id="menu" class="overlay">
+        <div class="brand">
+          <span>CA</span>
+          <div>
+            <p>Cricket Arena AI</p>
+            <h1>Night Chase</h1>
+          </div>
+        </div>
+        <button id="playBtn" class="primary">Play 1 Over Chase</button>
+        <a href="index.html">Back to project dashboard</a>
+      </section>
+
+      <header class="hud">
+        <div><span>Score</span><strong id="score">0/0</strong></div>
+        <div><span>Need</span><strong id="need">24 from 6</strong></div>
+        <div><span>Timing</span><strong id="timingText">Ready</strong></div>
+      </header>
+
+      <section id="mobileControls" class="mobile-controls">
+        <button data-shot="left">Loft</button>
+        <button data-shot="straight">Hit</button>
+        <button data-shot="right">Cut</button>
+      </section>
+
+      <div id="toast" class="toast">Tap Play</div>
+    </main>
+    <script src="play.js"></script>
+  </body>
+</html>
